@@ -1,0 +1,43 @@
+.app-container {
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #1a1a1a;
+    color: white;
+}
+
+h1 {
+    margin: 20px 0;
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #efefef;
+}
+
+.camera-feed {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+    overflow: hidden;
+    position: relative;
+}
+
+button {
+    transition: transform 0.1s, box-shadow 0.2s;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+.error-message {
+    color: #ff5252;
+    font-size: 1.2rem;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+}
