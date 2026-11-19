@@ -96,6 +96,29 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /api/capture/file/:filename - Stream a captured image file to the client
+router.get('/file/:filename', async (req, res) => {
+    try {
+        const { filename } = req.params;
+        if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+        const settings = await Settings.findOne() || new Settings();
+        const captureDir = settings.saveDirectory && fs.existsSync(settings.saveDirectory)
+            ? settings.saveDirectory
+            : CAPTURE_DIR;
+        const filepath = path.join(captureDir, filename);
+        if (!fs.existsSync(filepath)) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+        res.set('Cache-Control', 'public, max-age=86400');
+        res.sendFile(filepath);
+    } catch (err) {
+        console.error('[capture] Error serving file:', err);
+        res.status(500).json({ error: 'Failed to serve file' });
+    }
+});
+
 // DELETE /api/capture/:filename — Delete a captured image by filename
 router.delete('/:filename', async (req, res) => {
     try {
