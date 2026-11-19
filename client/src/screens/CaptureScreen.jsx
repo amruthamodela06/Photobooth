@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import CameraFeed from '../components/CameraFeed';
 import PhotoStrip from '../components/PhotoStrip';
 import FilterDrawer from '../components/FilterDrawer';
@@ -14,6 +14,7 @@ const CaptureScreen = ({
     setEditing
 }) => {
     const cameraRef = useRef(null);
+    const [countdownSeconds, setCountdownSeconds] = useState(3);
 
     const filterStyle = {
         filter: `${currentFilter.style.filter || ''} brightness(${editing.brightness}%) contrast(${editing.contrast}%)`
@@ -27,7 +28,7 @@ const CaptureScreen = ({
         setPhotos([]); // Clear previous
         if (cameraRef.current) {
             // Dynamic photo count based on layout
-            cameraRef.current.startSequence(layout?.photoCount || 3).then(() => {
+            cameraRef.current.startSequence(layout?.photoCount || 3, { countdownSeconds }).then(() => {
                 // Optional: Auto advance to review? For now let user click 'Done'
             });
         }
@@ -50,6 +51,23 @@ const CaptureScreen = ({
                     <div style={{
                         position: 'absolute', top: 0, left: '66%', width: '1px', height: '100%', background: 'rgba(255,255,255,0.2)', pointerEvents: 'none'
                     }} />
+
+                    {/* Countdown timer selector */}
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px', zIndex: 10 }}>
+                        {[3, 5, 10].map(s => (
+                            <button
+                                key={s}
+                                onClick={() => setCountdownSeconds(s)}
+                                style={{
+                                    padding: '6px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                                    background: countdownSeconds === s ? '#FF6F61' : 'rgba(0,0,0,0.45)',
+                                    color: 'white', fontWeight: 'bold', fontSize: '0.8rem'
+                                }}
+                            >
+                                {s}s
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Filter Drawer */}

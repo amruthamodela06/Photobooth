@@ -8,19 +8,24 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
     const [countdown, setCountdown] = useState(null);
 
     useImperativeHandle(ref, () => ({
-        startSequence: async (count) => {
+        /**
+         * Run a capture sequence.
+         * @param {number} count - number of photos to take
+         * @param {{ countdownSeconds?: number, delayMs?: number }} options
+         */
+        startSequence: async (count, { countdownSeconds = 3, delayMs = 2000 } = {}) => {
             for (let i = 0; i < count; i++) {
-                await runCountdown();
+                await runCountdown(countdownSeconds);
                 captureFrame();
                 // Wait a bit between shots
-                if (i < count - 1) await new Promise(r => setTimeout(r, 2000));
+                if (i < count - 1) await new Promise(r => setTimeout(r, delayMs));
             }
         }
     }));
 
-    const runCountdown = () => {
+    const runCountdown = (seconds) => {
         return new Promise(resolve => {
-            let count = 3;
+            let count = Math.max(1, seconds);
             setCountdown(count);
             const interval = setInterval(() => {
                 count--;
