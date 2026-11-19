@@ -3,6 +3,7 @@ const router = express.Router();
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
+const { validateCapture } = require('../middleware/validate');
 
 // Ensure captures directory exists
 const CAPTURE_DIR = path.join(__dirname, '../../captures');
@@ -13,7 +14,7 @@ if (!fs.existsSync(CAPTURE_DIR)) {
 const Session = require('../models/Session');
 const Settings = require('../models/Settings');
 
-router.post('/', async (req, res) => {
+router.post('/', validateCapture, async (req, res) => {
     try {
         const { image } = req.body;
         if (!image) {
@@ -63,6 +64,69 @@ router.post('/', async (req, res) => {
         } catch (e) { }
 
         res.status(500).json({ error: 'Failed to save image' });
+    }
+});
+
+// GET /api/capture — List all captured images
+router.get('/', async (req, res) => {
+    try {
+        const settings = await Settings.findOne() || new Settings();
+        const captureDir = settings.saveDirectory && fs.existsSync(settings.saveDirectory)
+            ? settings.saveDirectory
+            : CAPTURE_DIR;
+
+        const files = fs.readdirSync(captureDir)
+            .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
+            .map(f => {
+                const fullPath = path.join(captureDir, f);
+                const stat = fs.statSync(fullPath);
+                return {
+                    filename: f,
+                    filepath: fullPath,
+                    sizeBytes: stat.size,
+                    createdAt: stat.birthtime
+                };
+            })
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json({ count: files.length, captures: files });
+    } catch (err) {
+        console.error('[capture] Error listing captures:', err);
+        res.status(500).json({ error: 'Failed to list captures' });
+    }
+});
+
+// DELETE /api/capture/:filename — Delete a captured image by filename
+router.delete('/:filename', async (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        // Basic path traversal protection
+        if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const settings = await Settings.findOne() || new Settings();
+        const captureDir = settings.saveDirectory && fs.existsSync(settings.saveDirectory)
+            ? settings.saveDirectory
+            : CAPTURE_DIR;
+
+        const filepath = path.join(captureDir, filename);
+
+        if (!fs.existsSync(filepath)) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        fs.unlinkSync(filepath);
+
+        // Remove matching session log entries
+        await Session.deleteMany({ filepath });
+
+        console.log(`[capture] Deleted: ${filepath}`);
+        res.json({ success: true, deleted: filename });
+    } catch (err) {
+        console.error('[capture] Error deleting capture:', err);
+        res.status(500).json({ error: 'Failed to delete capture' });
     }
 });
 
