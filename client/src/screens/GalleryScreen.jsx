@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
+import Lightbox from '../components/Lightbox';
 
 const formatSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -11,6 +12,7 @@ const GalleryScreen = ({ onBack }) => {
     const [captures, setCaptures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [previewIndex, setPreviewIndex] = useState(null);
 
     const loadCaptures = useCallback(async () => {
         setLoading(true);
@@ -59,13 +61,14 @@ const GalleryScreen = ({ onBack }) => {
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
-                    {captures.map((c) => (
+                    {captures.map((c, i) => (
                         <figure key={c.filename} style={{ margin: 0, background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
                             <img
                                 src={api.captureFileUrl(c.filename)}
                                 alt={c.filename}
                                 loading="lazy"
-                                style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
+                                onClick={() => setPreviewIndex(i)}
+                                style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }}
                             />
                             <figcaption style={{ padding: '8px 10px', fontSize: '0.75rem', color: '#666', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
                                 <span>{new Date(c.createdAt).toLocaleString()} · {formatSize(c.sizeBytes)}</span>
@@ -81,6 +84,16 @@ const GalleryScreen = ({ onBack }) => {
                     ))}
                 </div>
             </main>
+
+            {previewIndex !== null && captures[previewIndex] && (
+                <Lightbox
+                    src={api.captureFileUrl(captures[previewIndex].filename)}
+                    caption={`${previewIndex + 1} / ${captures.length} · ${new Date(captures[previewIndex].createdAt).toLocaleString()}`}
+                    onClose={() => setPreviewIndex(null)}
+                    onPrev={previewIndex > 0 ? () => setPreviewIndex(previewIndex - 1) : null}
+                    onNext={previewIndex < captures.length - 1 ? () => setPreviewIndex(previewIndex + 1) : null}
+                />
+            )}
         </div>
     );
 };
