@@ -198,6 +198,23 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                                         }}
                                         style={{ width: '100%', accentColor: '#FF6F61' }}
                                     />
+                                    <label style={{ display: 'block', margin: '12px 0 10px', fontWeight: 'bold', color: '#666', fontSize: '0.9rem' }}>
+                                        Rotation ({placedStickers.find(s => s.id === selectedId)?.rotation || 0}°)
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="-180"
+                                        max="180"
+                                        step="5"
+                                        value={placedStickers.find(s => s.id === selectedId)?.rotation || 0}
+                                        onChange={(e) => {
+                                            const rotation = parseInt(e.target.value, 10);
+                                            setPlacedStickers(prev => prev.map(s => s.id === selectedId ? { ...s, rotation } : s));
+                                        }}
+                                        onDoubleClick={() => setPlacedStickers(prev => prev.map(s => s.id === selectedId ? { ...s, rotation: 0 } : s))}
+                                        title="Double-click to reset"
+                                        style={{ width: '100%', accentColor: '#FF6F61' }}
+                                    />
                                     <div style={{ textAlign: 'right', marginTop: '5px' }}>
                                         <button
                                             onClick={() => {
