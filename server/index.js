@@ -3,13 +3,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/flashpoint_db';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-console.log(`[Config] Running in ${NODE_ENV} mode on port ${PORT}`);
+logger.info(`Running in ${NODE_ENV} mode on port ${PORT}`);
 
 // Middleware
 app.use(cors());
@@ -18,8 +19,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database Connection
 mongoose.connect(MONGO_URI)
-  .then(() => console.log('[DB] MongoDB Connected successfully'))
-  .catch(err => console.error('[DB] MongoDB Connection Error:', err));
+  .then(() => logger.info('MongoDB Connected successfully'))
+  .catch(err => logger.error('MongoDB Connection Error', { error: err.message }));
 
 // Routes
 const captureRoute = require('./routes/capture');
@@ -33,5 +34,6 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server listening on port ${PORT}`);
 });
+
