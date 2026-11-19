@@ -1,11 +1,16 @@
 const mongoose = require('mongoose');
 
 const SettingsSchema = new mongoose.Schema({
-    boothName: { type: String, default: "FlashPoint Booth" },
-    saveDirectory: { type: String, default: "" }, // Empty means default to app directory
-    countdownTime: { type: Number, default: 3 },
-    overlayPath: { type: String, default: "" },
-    watermarkEnabled: { type: Boolean, default: false }
-});
+    boothName: { type: String, default: 'FlashPoint Booth', trim: true },
+    saveDirectory: { type: String, default: '' },
+    countdownTime: { type: Number, default: 3, min: 1, max: 10 },
+    overlayPath: { type: String, default: '' },
+    watermarkEnabled: { type: Boolean, default: false },
+    // Countdown & session flow
+    countdownDuration: { type: Number, default: 3, min: 1, max: 10 },
+    autoPrint: { type: Boolean, default: false },
+    autoAdvance: { type: Boolean, default: false },
+    delayBetweenShots: { type: Number, default: 2000, min: 500, max: 10000 }, // ms
+}, { timestamps: true });
 
 module.exports = mongoose.model('Settings', SettingsSchema);
