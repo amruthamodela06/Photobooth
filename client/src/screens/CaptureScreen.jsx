@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import CameraFeed from '../components/CameraFeed';
 import PhotoStrip from '../components/PhotoStrip';
 import FilterDrawer from '../components/FilterDrawer';
@@ -14,6 +14,9 @@ const CaptureScreen = ({
     setEditing
 }) => {
     const cameraRef = useRef(null);
+    const [countdownSeconds, setCountdownSeconds] = useState(3);
+    const [isCapturing, setIsCapturing] = useState(false);
+    const totalShots = layout?.photoCount || 3;
 
     const filterStyle = {
         filter: `${currentFilter.style.filter || ''} brightness(${editing.brightness}%) contrast(${editing.contrast}%)`
@@ -23,15 +26,32 @@ const CaptureScreen = ({
         setPhotos(prev => [...prev, dataUrl]);
     };
 
-    const triggerCaptureSequence = () => {
+    const triggerCaptureSequence = async () => {
+        if (isCapturing || !cameraRef.current) return; // ignore double-clicks mid-sequence
         setPhotos([]); // Clear previous
-        if (cameraRef.current) {
+        setIsCapturing(true);
+        try {
             // Dynamic photo count based on layout
-            cameraRef.current.startSequence(layout?.photoCount || 3).then(() => {
-                // Optional: Auto advance to review? For now let user click 'Done'
-            });
+            await cameraRef.current.startSequence(totalShots, { countdownSeconds });
+        } finally {
+            setIsCapturing(false);
         }
     };
+
+    // Spacebar starts a capture sequence (kiosk-friendly: works with a USB foot pedal / big button)
+    useEffect(() => {
+        const onKey = (e) => {
+            if (e.code !== 'Space' || e.repeat) return;
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+            e.preventDefault();
+            triggerCaptureSequence();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    });
+
+    const stripComplete = photos.length >= totalShots;
 
     return (
         <div style={{ display: 'flex', height: '100vh', padding: '20px', gap: '20px' }}>
@@ -50,6 +70,23 @@ const CaptureScreen = ({
                     <div style={{
                         position: 'absolute', top: 0, left: '66%', width: '1px', height: '100%', background: 'rgba(255,255,255,0.2)', pointerEvents: 'none'
                     }} />
+
+                    {/* Countdown timer selector */}
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px', zIndex: 10 }}>
+                        {[3, 5, 10].map(s => (
+                            <button
+                                key={s}
+                                onClick={() => setCountdownSeconds(s)}
+                                style={{
+                                    padding: '6px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                                    background: countdownSeconds === s ? '#FF6F61' : 'rgba(0,0,0,0.45)',
+                                    color: 'white', fontWeight: 'bold', fontSize: '0.8rem'
+                                }}
+                            >
+                                {s}s
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Filter Drawer */}
@@ -59,14 +96,24 @@ const CaptureScreen = ({
 
                 {/* Big Pulse Button */}
                 <div style={{
-                    position: 'absolute', bottom: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 20
+                    position: 'absolute', bottom: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 20,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
                 }}>
+                    {isCapturing && (
+                        <span style={{ background: 'rgba(0,0,0,0.55)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                            Shot {Math.min(photos.length + 1, totalShots)} of {totalShots}
+                        </span>
+                    )}
                     <button
                         onClick={triggerCaptureSequence}
+                        disabled={isCapturing}
+                        aria-label={isCapturing ? 'Capturing…' : 'Start capture'}
                         style={{
                             width: '90px', height: '90px', borderRadius: '50%',
                             background: '#FF6F61', border: '5px solid white',
-                            boxShadow: '0 0 20px rgba(0,0,0,0.2)', cursor: 'pointer',
+                            boxShadow: '0 0 20px rgba(0,0,0,0.2)',
+                            cursor: isCapturing ? 'not-allowed' : 'pointer',
+                            opacity: isCapturing ? 0.5 : 1,
                             outline: 'none'
                         }}
                     />
@@ -79,7 +126,22 @@ const CaptureScreen = ({
                 <PhotoStrip photos={photos} filterStyle={filterStyle} layout={layout} />
 
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingTop: '20px' }}>
-                    <button className="btn-primary" onClick={onNext} style={{ width: '100%', background: '#4CAF50' }}>
+                    {photos.length > 0 && (
+                        <button
+                            onClick={() => setPhotos([])}
+                            disabled={isCapturing}
+                            style={{ flex: '0 0 auto', padding: '0 18px', borderRadius: '50px', border: 'none', background: '#eee', color: '#666', fontWeight: 'bold', cursor: isCapturing ? 'not-allowed' : 'pointer' }}
+                        >
+                            Start Over
+                        </button>
+                    )}
+                    <button
+                        className="btn-primary"
+                        onClick={onNext}
+                        disabled={!stripComplete || isCapturing}
+                        title={stripComplete ? '' : `Take all ${totalShots} photos first`}
+                        style={{ width: '100%', background: '#4CAF50', opacity: stripComplete && !isCapturing ? 1 : 0.5, cursor: stripComplete && !isCapturing ? 'pointer' : 'not-allowed' }}
+                    >
                         Finish
                     </button>
                 </div>

@@ -6,21 +6,28 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
     const [stream, setStream] = useState(null);
     const [error, setError] = useState(null);
     const [countdown, setCountdown] = useState(null);
+    const [flash, setFlash] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
 
     useImperativeHandle(ref, () => ({
-        startSequence: async (count) => {
+        /**
+         * Run a capture sequence.
+         * @param {number} count - number of photos to take
+         * @param {{ countdownSeconds?: number, delayMs?: number }} options
+         */
+        startSequence: async (count, { countdownSeconds = 3, delayMs = 2000 } = {}) => {
             for (let i = 0; i < count; i++) {
-                await runCountdown();
+                await runCountdown(countdownSeconds);
                 captureFrame();
                 // Wait a bit between shots
-                if (i < count - 1) await new Promise(r => setTimeout(r, 2000));
+                if (i < count - 1) await new Promise(r => setTimeout(r, delayMs));
             }
         }
     }));
 
-    const runCountdown = () => {
+    const runCountdown = (seconds) => {
         return new Promise(resolve => {
-            let count = 3;
+            let count = Math.max(1, seconds);
             setCountdown(count);
             const interval = setInterval(() => {
                 count--;
@@ -45,34 +52,66 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
             ctx.scale(-1, 1);
             ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL('image/png');
+            setFlash(true);
+            setTimeout(() => setFlash(false), 150);
             if (onPhotoTaken) onPhotoTaken(dataUrl);
         }
     };
 
     useEffect(() => {
+        let activeStream = null;
+        let cancelled = false;
+        setError(null);
         const initCamera = async () => {
             try {
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
                     video: { width: 1920, height: 1080 }
                 });
+                // Component unmounted while waiting for permission — release immediately
+                if (cancelled) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    return;
+                }
+                activeStream = mediaStream;
                 setStream(mediaStream);
                 if (videoRef.current) {
                     videoRef.current.srcObject = mediaStream;
                 }
             } catch (err) {
                 console.error("Error accessing camera:", err);
-                setError("Could not access camera. Please ensure it is connected.");
+                const messages = {
+                    NotAllowedError: 'Camera permission was denied. Allow camera access and press Retry.',
+                    NotFoundError: 'No camera found. Connect a webcam and press Retry.',
+                    NotReadableError: 'The camera is in use by another application. Close it and press Retry.',
+                    OverconstrainedError: 'This camera does not support the requested resolution.',
+                };
+                setError(messages[err.name] || "Could not access camera. Please ensure it is connected.");
             }
         };
         initCamera();
         return () => {
-            if (stream) stream.getTracks().forEach(track => track.stop());
+            cancelled = true;
+            // `stream` state would be stale here, so use the local reference
+            if (activeStream) activeStream.getTracks().forEach(track => track.stop());
         };
-    }, []);
+    }, [retryKey]);
 
     return (
         <div className="camera-feed" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <div className="error-message" style={{
+                    position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: '16px', color: 'white', zIndex: 5, textAlign: 'center', padding: '20px'
+                }}>
+                    <span style={{ fontSize: '1.1rem' }}>{error}</span>
+                    <button
+                        onClick={() => setRetryKey(k => k + 1)}
+                        style={{ padding: '10px 24px', borderRadius: '50px', border: 'none', background: '#FF6F61', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
             <canvas ref={canvasRef} style={{ display: 'none' }} />
             <video
                 ref={videoRef}
@@ -88,6 +127,10 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
                     ...filterStyle
                 }}
             />
+            <div style={{
+                position: 'absolute', inset: 0, background: 'white', pointerEvents: 'none',
+                opacity: flash ? 0.9 : 0, transition: flash ? 'none' : 'opacity 0.35s ease-out'
+            }} />
             {countdown && (
                 <div style={{
                     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
