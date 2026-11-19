@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { patterns, stickers } from '../utils/assets';
+import { patterns, stickerCategories } from '../utils/assets';
 import PhotoStrip from '../components/PhotoStrip';
 
 const FONTS = [
@@ -31,11 +31,24 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
     const [textAlign, setTextAlign] = useState('center');
     const photoStripRef = useRef(null);
 
+    const getMaxZ = () => placedStickers.reduce((max, s) => Math.max(max, s.zIndex || 100), 100);
+    const getMinZ = () => placedStickers.reduce((min, s) => Math.min(min, s.zIndex || 100), 100);
+
+    const bringToFront = (id) => {
+        const top = getMaxZ() + 1;
+        setPlacedStickers(prev => prev.map(s => s.id === id ? { ...s, zIndex: top } : s));
+    };
+
+    const sendToBack = (id) => {
+        const bottom = Math.max(getMinZ() - 1, 1);
+        setPlacedStickers(prev => prev.map(s => s.id === id ? { ...s, zIndex: bottom } : s));
+    };
+
     const addSticker = (sticker) => {
         const newId = Date.now();
         setPlacedStickers([
             ...placedStickers,
-            { ...sticker, x: 50, y: 50, id: newId, scale: 1 }
+            { ...sticker, x: 50, y: 50, id: newId, scale: 1, rotation: 0, zIndex: getMaxZ() + 1 }
         ]);
         setSelectedId(newId);
         setActiveTab('STICKERS');
@@ -161,15 +174,19 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                     {/* STICKERS TAB */}
                     {activeTab === 'STICKERS' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                                {stickers.map(s => (
+                            {stickerCategories.map(cat => (
+                            <div key={cat.label}>
+                            <h4 style={{ margin: '0 0 8px', color: '#888', fontSize: '0.85rem' }}>{cat.label}</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                                {cat.stickers.map(s => (
                                     <div
                                         key={s.id}
                                         onClick={() => addSticker(s)}
+                                        title={s.id}
                                         style={{
-                                            fontSize: '30px',
+                                            fontSize: '26px',
                                             textAlign: 'center',
-                                            padding: '10px',
+                                            padding: '8px',
                                             background: '#fff',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
@@ -180,6 +197,8 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                                     </div>
                                 ))}
                             </div>
+                            </div>
+                            ))}
 
                             {selectedId && (
                                 <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
@@ -198,7 +217,38 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                                         }}
                                         style={{ width: '100%', accentColor: '#FF6F61' }}
                                     />
-                                    <div style={{ textAlign: 'right', marginTop: '5px' }}>
+                                    <label style={{ display: 'block', margin: '12px 0 10px', fontWeight: 'bold', color: '#666', fontSize: '0.9rem' }}>
+                                        Rotation ({placedStickers.find(s => s.id === selectedId)?.rotation || 0}°)
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="-180"
+                                        max="180"
+                                        step="5"
+                                        value={placedStickers.find(s => s.id === selectedId)?.rotation || 0}
+                                        onChange={(e) => {
+                                            const rotation = parseInt(e.target.value, 10);
+                                            setPlacedStickers(prev => prev.map(s => s.id === selectedId ? { ...s, rotation } : s));
+                                        }}
+                                        onDoubleClick={() => setPlacedStickers(prev => prev.map(s => s.id === selectedId ? { ...s, rotation: 0 } : s))}
+                                        title="Double-click to reset"
+                                        style={{ width: '100%', accentColor: '#FF6F61' }}
+                                    />
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                                        <button
+                                            onClick={() => bringToFront(selectedId)}
+                                            style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid #ddd', background: '#fafafa', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        >
+                                            ⬆ Bring to Front
+                                        </button>
+                                        <button
+                                            onClick={() => sendToBack(selectedId)}
+                                            style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid #ddd', background: '#fafafa', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        >
+                                            ⬇ Send to Back
+                                        </button>
+                                    </div>
+                                    <div style={{ textAlign: 'right', marginTop: '10px' }}>
                                         <button
                                             onClick={() => {
                                                 setPlacedStickers(prev => prev.filter(s => s.id !== selectedId));

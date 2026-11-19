@@ -98,19 +98,21 @@ const PhotoStrip = forwardRef(({ photos, filterStyle, layout, frameStyle, sticke
                             position: 'absolute',
                             top: `${s.y}%`,
                             left: `${s.x}%`,
-                            transform: `translate(-50%, -50%) scale(${s.scale || 1})`,
+                            transform: `translate(-50%, -50%) scale(${s.scale || 1}) rotate(${s.rotation || 0}deg)`,
                             fontSize: '40px',
                             cursor: 'grab',
                             userSelect: 'none',
-                            zIndex: 100,
-                            border: selectedId === s.id ? '2px dashed #000' : 'none',
+                            zIndex: s.zIndex || 100,
+                            border: selectedId === s.id ? '2px dashed #ff4081' : 'none',
                             borderRadius: '8px',
-                            padding: '5px'
+                            padding: '5px',
+                            transition: 'border 0.1s ease'
                         }}
                     >
                         {s.emoji}
                     </div>
                 ))}
+
             </div>
 
             {/* If we're on the review screen (or just want the button here) */}
