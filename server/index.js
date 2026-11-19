@@ -33,6 +33,22 @@ app.get('/', (req, res) => {
   res.send('FlashPoint Controller is running');
 });
 
+// Health-check endpoint — reports server uptime and MongoDB connection state
+app.get('/api/health', (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const dbStateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        environment: NODE_ENV,
+        database: {
+            status: dbStateMap[dbState] || 'unknown',
+            readyState: dbState
+        }
+    });
+});
+
 app.listen(PORT, () => {
   logger.info(`Server listening on port ${PORT}`);
 });
