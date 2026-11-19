@@ -16,6 +16,12 @@ export const patterns = [
     { id: 'grad-rose', name: 'Rose Gold', style: { background: 'linear-gradient(135deg, #f5a7a7 0%, #e8d5b7 100%)' } },
     { id: 'grad-midnight', name: 'Midnight', style: { background: 'linear-gradient(135deg, #232526 0%, #414345 100%)' } },
     { id: 'grad-spring', name: 'Spring', style: { background: 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)' } },
+    // New gradient frames
+    { id: 'grad-sunset', name: 'Sunset', style: { background: 'linear-gradient(135deg, #f83600 0%, #f9d423 100%)' } },
+    { id: 'grad-berry', name: 'Berry', style: { background: 'linear-gradient(135deg, #6a3093 0%, #a044ff 100%)' } },
+    { id: 'grad-peach-cream', name: 'Peach Cream', style: { background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' } },
+    { id: 'grad-ice', name: 'Ice Blue', style: { background: 'linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)' } },
+    { id: 'grad-dusk', name: 'Dusk', style: { background: 'linear-gradient(135deg, #2c3e50 0%, #fd746c 100%)' } },
 
     // Patterns
     {
@@ -55,38 +61,73 @@ export const patterns = [
     },
 ];
 
-export const stickers = [
-    // Originals
-    { id: 'heart', emoji: '❤️' },
-    { id: 'sparkles', emoji: '✨' },
-    { id: 'crown', emoji: '👑' },
-    { id: 'cat', emoji: '🐱' },
-    { id: 'bunny', emoji: '🐰' },
-    { id: 'flower', emoji: '🌸' },
-    { id: 'star', emoji: '⭐' },
-    { id: 'sunglasses', emoji: '😎' },
-    { id: 'kiss', emoji: '💋' },
-    { id: 'bow', emoji: '🎀' },
-
-    // New
-    { id: 'rainbow', emoji: '🌈' },
-    { id: 'butterfly', emoji: '🦋' },
-    { id: 'cherry', emoji: '🍒' },
-    { id: 'camera', emoji: '📷' },
-    { id: 'fire', emoji: '🔥' },
-    { id: 'diamond', emoji: '💎' },
-    { id: 'moon', emoji: '🌙' },
-    { id: 'balloon', emoji: '🎈' },
-    { id: 'sunflower', emoji: '🌻' },
-    { id: 'clover', emoji: '🍀' },
-    { id: 'shooting-star', emoji: '🌟' },
-    { id: 'ghost', emoji: '👻' },
-    { id: 'purple-heart', emoji: '💜' },
-    { id: 'rose', emoji: '🌹' },
-    { id: 'lightning', emoji: '⚡' },
-    { id: 'snowflake', emoji: '❄️' },
-    { id: 'cake', emoji: '🎂' },
-    { id: 'bear', emoji: '🐻' },
-    { id: 'alien', emoji: '👾' },
-    { id: 'peace', emoji: '✌️' },
+export const stickerCategories = [
+    {
+        label: '💕 Classics',
+        stickers: [
+            { id: 'heart', emoji: '❤️' },
+            { id: 'sparkles', emoji: '✨' },
+            { id: 'crown', emoji: '👑' },
+            { id: 'cat', emoji: '🐱' },
+            { id: 'bunny', emoji: '🐰' },
+            { id: 'flower', emoji: '🌸' },
+            { id: 'star', emoji: '⭐' },
+            { id: 'sunglasses', emoji: '😎' },
+            { id: 'kiss', emoji: '💋' },
+            { id: 'bow', emoji: '🎀' },
+        ]
+    },
+    {
+        label: '🌈 Nature',
+        stickers: [
+            { id: 'rainbow', emoji: '🌈' },
+            { id: 'butterfly', emoji: '🦋' },
+            { id: 'cherry', emoji: '🍒' },
+            { id: 'sunflower', emoji: '🌻' },
+            { id: 'clover', emoji: '🍀' },
+            { id: 'rose', emoji: '🌹' },
+            { id: 'snowflake', emoji: '❄️' },
+            { id: 'moon', emoji: '🌙' },
+            { id: 'shooting-star', emoji: '🌟' },
+            { id: 'mushroom', emoji: '🍄' },
+        ]
+    },
+    {
+        label: '🎉 Party',
+        stickers: [
+            { id: 'camera', emoji: '📷' },
+            { id: 'fire', emoji: '🔥' },
+            { id: 'diamond', emoji: '💎' },
+            { id: 'balloon', emoji: '🎈' },
+            { id: 'ghost', emoji: '👻' },
+            { id: 'purple-heart', emoji: '💜' },
+            { id: 'lightning', emoji: '⚡' },
+            { id: 'cake', emoji: '🎂' },
+            { id: 'bear', emoji: '🐻' },
+            { id: 'alien', emoji: '👾' },
+            { id: 'peace', emoji: '✌️' },
+            { id: 'confetti', emoji: '🎊' },
+            { id: 'party-popper', emoji: '🎉' },
+            { id: 'disco-ball', emoji: '🪩' },
+            { id: 'microphone', emoji: '🎤' },
+        ]
+    },
+    {
+        label: '🍕 Food & Fun',
+        stickers: [
+            { id: 'pizza', emoji: '🍕' },
+            { id: 'donut', emoji: '🍩' },
+            { id: 'ice-cream', emoji: '🍦' },
+            { id: 'bubble-tea', emoji: '🧋' },
+            { id: 'strawberry', emoji: '🍓' },
+            { id: 'watermelon', emoji: '🍉' },
+            { id: 'lemon', emoji: '🍋' },
+            { id: 'avocado', emoji: '🥑' },
+            { id: 'cookie', emoji: '🍪' },
+            { id: 'candy', emoji: '🍬' },
+        ]
+    }
 ];
+
+// Flat sticker list (backwards compatibility)
+export const stickers = stickerCategories.flatMap(cat => cat.stickers);
