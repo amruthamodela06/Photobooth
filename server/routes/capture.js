@@ -96,5 +96,38 @@ router.get('/', async (req, res) => {
     }
 });
 
-module.exports = router;
+// DELETE /api/capture/:filename — Delete a captured image by filename
+router.delete('/:filename', async (req, res) => {
+    try {
+        const { filename } = req.params;
 
+        // Basic path traversal protection
+        if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const settings = await Settings.findOne() || new Settings();
+        const captureDir = settings.saveDirectory && fs.existsSync(settings.saveDirectory)
+            ? settings.saveDirectory
+            : CAPTURE_DIR;
+
+        const filepath = path.join(captureDir, filename);
+
+        if (!fs.existsSync(filepath)) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        fs.unlinkSync(filepath);
+
+        // Remove matching session log entries
+        await Session.deleteMany({ filepath });
+
+        console.log(`[capture] Deleted: ${filepath}`);
+        res.json({ success: true, deleted: filename });
+    } catch (err) {
+        console.error('[capture] Error deleting capture:', err);
+        res.status(500).json({ error: 'Failed to delete capture' });
+    }
+});
+
+module.exports = router;
