@@ -6,6 +6,7 @@ import WelcomeScreen from './screens/WelcomeScreen'
 import LayoutSelectionScreen from './screens/LayoutSelectionScreen'
 import CaptureScreen from './screens/CaptureScreen'
 import CustomizeScreen from './screens/CustomizeScreen'
+import GalleryScreen from './screens/GalleryScreen'
 
 function App() {
     const [screen, setScreen] = useState('WELCOME');
@@ -34,7 +35,11 @@ function App() {
     return (
         <div className="app-container" style={{ padding: 0, height: '100vh', background: 'transparent' }}>
             {screen === 'WELCOME' && (
-                <WelcomeScreen onStart={handleStart} />
+                <WelcomeScreen onStart={handleStart} onOpenGallery={() => setScreen('GALLERY')} />
+            )}
+
+            {screen === 'GALLERY' && (
+                <GalleryScreen onBack={() => setScreen('WELCOME')} />
             )}
 
             {screen === 'LAYOUT' && (
