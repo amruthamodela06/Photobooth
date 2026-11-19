@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const logger = require('./utils/logger');
+const connectDB = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,9 +19,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database Connection
-mongoose.connect(MONGO_URI)
-  .then(() => logger.info('MongoDB Connected successfully'))
-  .catch(err => logger.error('MongoDB Connection Error', { error: err.message }));
+connectDB();
 
 // Routes
 const captureRoute = require('./routes/capture');
