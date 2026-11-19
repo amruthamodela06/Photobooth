@@ -11,6 +11,10 @@ const SettingsSchema = new mongoose.Schema({
     autoPrint: { type: Boolean, default: false },
     autoAdvance: { type: Boolean, default: false },
     delayBetweenShots: { type: Number, default: 2000, min: 500, max: 10000 }, // ms
+    // Print settings
+    printCopies: { type: Number, default: 1, min: 1, max: 10 },
+    watermarkText: { type: String, default: '', trim: true, maxlength: 100 },
 }, { timestamps: true });
+
 
 module.exports = mongoose.model('Settings', SettingsSchema);
