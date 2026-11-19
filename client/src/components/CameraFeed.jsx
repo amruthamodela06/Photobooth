@@ -50,11 +50,19 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
     };
 
     useEffect(() => {
+        let activeStream = null;
+        let cancelled = false;
         const initCamera = async () => {
             try {
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
                     video: { width: 1920, height: 1080 }
                 });
+                // Component unmounted while waiting for permission — release immediately
+                if (cancelled) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    return;
+                }
+                activeStream = mediaStream;
                 setStream(mediaStream);
                 if (videoRef.current) {
                     videoRef.current.srcObject = mediaStream;
@@ -66,7 +74,9 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
         };
         initCamera();
         return () => {
-            if (stream) stream.getTracks().forEach(track => track.stop());
+            cancelled = true;
+            // `stream` state would be stale here, so use the local reference
+            if (activeStream) activeStream.getTracks().forEach(track => track.stop());
         };
     }, []);
 
