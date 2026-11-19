@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import CameraFeed from '../components/CameraFeed';
 import PhotoStrip from '../components/PhotoStrip';
 import FilterDrawer from '../components/FilterDrawer';
@@ -37,6 +37,21 @@ const CaptureScreen = ({
             setIsCapturing(false);
         }
     };
+
+    // Spacebar starts a capture sequence (kiosk-friendly: works with a USB foot pedal / big button)
+    useEffect(() => {
+        const onKey = (e) => {
+            if (e.code !== 'Space' || e.repeat) return;
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+            e.preventDefault();
+            triggerCaptureSequence();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    });
+
+    const stripComplete = photos.length >= totalShots;
 
     return (
         <div style={{ display: 'flex', height: '100vh', padding: '20px', gap: '20px' }}>
@@ -111,7 +126,13 @@ const CaptureScreen = ({
                 <PhotoStrip photos={photos} filterStyle={filterStyle} layout={layout} />
 
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingTop: '20px' }}>
-                    <button className="btn-primary" onClick={onNext} style={{ width: '100%', background: '#4CAF50' }}>
+                    <button
+                        className="btn-primary"
+                        onClick={onNext}
+                        disabled={!stripComplete || isCapturing}
+                        title={stripComplete ? '' : `Take all ${totalShots} photos first`}
+                        style={{ width: '100%', background: '#4CAF50', opacity: stripComplete && !isCapturing ? 1 : 0.5, cursor: stripComplete && !isCapturing ? 'pointer' : 'not-allowed' }}
+                    >
                         Finish
                     </button>
                 </div>
