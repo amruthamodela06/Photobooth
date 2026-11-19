@@ -68,8 +68,14 @@ router.patch('/', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/settings/reset
+ * Wipes existing settings document and re-creates one using all schema defaults.
+ * Useful for factory-resetting the booth between events or for testing.
+ */
 // POST /api/settings/reset — Reset settings to schema defaults
 router.post('/reset', async (req, res) => {
+
     try {
         await Settings.deleteMany({});
         const freshSettings = new Settings();
