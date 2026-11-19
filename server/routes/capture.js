@@ -67,4 +67,34 @@ router.post('/', validateCapture, async (req, res) => {
     }
 });
 
+// GET /api/capture — List all captured images
+router.get('/', async (req, res) => {
+    try {
+        const settings = await Settings.findOne() || new Settings();
+        const captureDir = settings.saveDirectory && fs.existsSync(settings.saveDirectory)
+            ? settings.saveDirectory
+            : CAPTURE_DIR;
+
+        const files = fs.readdirSync(captureDir)
+            .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
+            .map(f => {
+                const fullPath = path.join(captureDir, f);
+                const stat = fs.statSync(fullPath);
+                return {
+                    filename: f,
+                    filepath: fullPath,
+                    sizeBytes: stat.size,
+                    createdAt: stat.birthtime
+                };
+            })
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json({ count: files.length, captures: files });
+    } catch (err) {
+        console.error('[capture] Error listing captures:', err);
+        res.status(500).json({ error: 'Failed to list captures' });
+    }
+});
+
 module.exports = router;
+
