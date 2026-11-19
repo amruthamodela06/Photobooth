@@ -15,6 +15,8 @@ const CaptureScreen = ({
 }) => {
     const cameraRef = useRef(null);
     const [countdownSeconds, setCountdownSeconds] = useState(3);
+    const [isCapturing, setIsCapturing] = useState(false);
+    const totalShots = layout?.photoCount || 3;
 
     const filterStyle = {
         filter: `${currentFilter.style.filter || ''} brightness(${editing.brightness}%) contrast(${editing.contrast}%)`
@@ -24,13 +26,15 @@ const CaptureScreen = ({
         setPhotos(prev => [...prev, dataUrl]);
     };
 
-    const triggerCaptureSequence = () => {
+    const triggerCaptureSequence = async () => {
+        if (isCapturing || !cameraRef.current) return; // ignore double-clicks mid-sequence
         setPhotos([]); // Clear previous
-        if (cameraRef.current) {
+        setIsCapturing(true);
+        try {
             // Dynamic photo count based on layout
-            cameraRef.current.startSequence(layout?.photoCount || 3, { countdownSeconds }).then(() => {
-                // Optional: Auto advance to review? For now let user click 'Done'
-            });
+            await cameraRef.current.startSequence(totalShots, { countdownSeconds });
+        } finally {
+            setIsCapturing(false);
         }
     };
 
@@ -77,14 +81,24 @@ const CaptureScreen = ({
 
                 {/* Big Pulse Button */}
                 <div style={{
-                    position: 'absolute', bottom: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 20
+                    position: 'absolute', bottom: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 20,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
                 }}>
+                    {isCapturing && (
+                        <span style={{ background: 'rgba(0,0,0,0.55)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                            Shot {Math.min(photos.length + 1, totalShots)} of {totalShots}
+                        </span>
+                    )}
                     <button
                         onClick={triggerCaptureSequence}
+                        disabled={isCapturing}
+                        aria-label={isCapturing ? 'Capturing…' : 'Start capture'}
                         style={{
                             width: '90px', height: '90px', borderRadius: '50%',
                             background: '#FF6F61', border: '5px solid white',
-                            boxShadow: '0 0 20px rgba(0,0,0,0.2)', cursor: 'pointer',
+                            boxShadow: '0 0 20px rgba(0,0,0,0.2)',
+                            cursor: isCapturing ? 'not-allowed' : 'pointer',
+                            opacity: isCapturing ? 0.5 : 1,
                             outline: 'none'
                         }}
                     />
