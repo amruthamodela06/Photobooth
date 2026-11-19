@@ -27,6 +27,18 @@ const GalleryScreen = ({ onBack }) => {
 
     useEffect(() => { loadCaptures(); }, [loadCaptures]);
 
+    const handleDelete = async (filename) => {
+        if (!window.confirm(`Delete ${filename}? This cannot be undone.`)) return;
+        const previous = captures;
+        setCaptures((prev) => prev.filter((c) => c.filename !== filename));
+        try {
+            await api.deleteCapture(filename);
+        } catch (err) {
+            setCaptures(previous); // roll back on failure
+            setError(`Delete failed: ${err.message}`);
+        }
+    };
+
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#FFF0F5' }}>
             <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 30px' }}>
@@ -55,8 +67,15 @@ const GalleryScreen = ({ onBack }) => {
                                 loading="lazy"
                                 style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
                             />
-                            <figcaption style={{ padding: '8px 10px', fontSize: '0.75rem', color: '#666' }}>
-                                {new Date(c.createdAt).toLocaleString()} · {formatSize(c.sizeBytes)}
+                            <figcaption style={{ padding: '8px 10px', fontSize: '0.75rem', color: '#666', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                                <span>{new Date(c.createdAt).toLocaleString()} · {formatSize(c.sizeBytes)}</span>
+                                <button
+                                    onClick={() => handleDelete(c.filename)}
+                                    title="Delete photo"
+                                    style={{ border: 'none', background: '#ffebee', color: '#e53935', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '0.75rem' }}
+                                >
+                                    Delete
+                                </button>
                             </figcaption>
                         </figure>
                     ))}
