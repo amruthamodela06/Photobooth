@@ -126,6 +126,15 @@ const CaptureScreen = ({
                 <PhotoStrip photos={photos} filterStyle={filterStyle} layout={layout} />
 
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', paddingTop: '20px' }}>
+                    {photos.length > 0 && (
+                        <button
+                            onClick={() => setPhotos([])}
+                            disabled={isCapturing}
+                            style={{ flex: '0 0 auto', padding: '0 18px', borderRadius: '50px', border: 'none', background: '#eee', color: '#666', fontWeight: 'bold', cursor: isCapturing ? 'not-allowed' : 'pointer' }}
+                        >
+                            Start Over
+                        </button>
+                    )}
                     <button
                         className="btn-primary"
                         onClick={onNext}
