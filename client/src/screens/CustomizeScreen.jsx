@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { patterns, stickers } from '../utils/assets';
+import { patterns, stickerCategories } from '../utils/assets';
 import PhotoStrip from '../components/PhotoStrip';
 
 const FONTS = [
@@ -174,15 +174,19 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                     {/* STICKERS TAB */}
                     {activeTab === 'STICKERS' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                                {stickers.map(s => (
+                            {stickerCategories.map(cat => (
+                            <div key={cat.label}>
+                            <h4 style={{ margin: '0 0 8px', color: '#888', fontSize: '0.85rem' }}>{cat.label}</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                                {cat.stickers.map(s => (
                                     <div
                                         key={s.id}
                                         onClick={() => addSticker(s)}
+                                        title={s.id}
                                         style={{
-                                            fontSize: '30px',
+                                            fontSize: '26px',
                                             textAlign: 'center',
-                                            padding: '10px',
+                                            padding: '8px',
                                             background: '#fff',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
@@ -193,6 +197,8 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                                     </div>
                                 ))}
                             </div>
+                            </div>
+                            ))}
 
                             {selectedId && (
                                 <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
