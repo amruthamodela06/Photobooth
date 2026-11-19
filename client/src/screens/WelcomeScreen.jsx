@@ -1,6 +1,6 @@
 import React from 'react';
 
-const WelcomeScreen = ({ onStart }) => {
+const WelcomeScreen = ({ onStart, onOpenGallery }) => {
     return (
         <div style={{
             height: '100vh',
@@ -39,6 +39,14 @@ const WelcomeScreen = ({ onStart }) => {
                 <button className="btn-primary" onClick={onStart} style={{ fontSize: '1.5rem', animation: 'pulse 2s infinite' }}>
                     Start Booth
                 </button>
+                {onOpenGallery && (
+                    <button
+                        onClick={onOpenGallery}
+                        style={{ marginTop: '20px', background: 'none', border: 'none', color: '#FF6F61', fontSize: '1.1rem', textDecoration: 'underline', cursor: 'pointer' }}
+                    >
+                        View Gallery
+                    </button>
+                )}
             </div>
         </div>
     );
