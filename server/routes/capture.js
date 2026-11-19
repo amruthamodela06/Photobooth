@@ -3,6 +3,7 @@ const router = express.Router();
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
+const { validateCapture } = require('../middleware/validate');
 
 // Ensure captures directory exists
 const CAPTURE_DIR = path.join(__dirname, '../../captures');
@@ -13,7 +14,7 @@ if (!fs.existsSync(CAPTURE_DIR)) {
 const Session = require('../models/Session');
 const Settings = require('../models/Settings');
 
-router.post('/', async (req, res) => {
+router.post('/', validateCapture, async (req, res) => {
     try {
         const { image } = req.body;
         if (!image) {
