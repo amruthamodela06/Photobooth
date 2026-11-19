@@ -31,11 +31,24 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
     const [textAlign, setTextAlign] = useState('center');
     const photoStripRef = useRef(null);
 
+    const getMaxZ = () => placedStickers.reduce((max, s) => Math.max(max, s.zIndex || 100), 100);
+    const getMinZ = () => placedStickers.reduce((min, s) => Math.min(min, s.zIndex || 100), 100);
+
+    const bringToFront = (id) => {
+        const top = getMaxZ() + 1;
+        setPlacedStickers(prev => prev.map(s => s.id === id ? { ...s, zIndex: top } : s));
+    };
+
+    const sendToBack = (id) => {
+        const bottom = Math.max(getMinZ() - 1, 1);
+        setPlacedStickers(prev => prev.map(s => s.id === id ? { ...s, zIndex: bottom } : s));
+    };
+
     const addSticker = (sticker) => {
         const newId = Date.now();
         setPlacedStickers([
             ...placedStickers,
-            { ...sticker, x: 50, y: 50, id: newId, scale: 1 }
+            { ...sticker, x: 50, y: 50, id: newId, scale: 1, rotation: 0, zIndex: getMaxZ() + 1 }
         ]);
         setSelectedId(newId);
         setActiveTab('STICKERS');
@@ -215,7 +228,21 @@ const CustomizeScreen = ({ photos, layout, onBack, onFinish }) => {
                                         title="Double-click to reset"
                                         style={{ width: '100%', accentColor: '#FF6F61' }}
                                     />
-                                    <div style={{ textAlign: 'right', marginTop: '5px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                                        <button
+                                            onClick={() => bringToFront(selectedId)}
+                                            style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid #ddd', background: '#fafafa', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        >
+                                            ⬆ Bring to Front
+                                        </button>
+                                        <button
+                                            onClick={() => sendToBack(selectedId)}
+                                            style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid #ddd', background: '#fafafa', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        >
+                                            ⬇ Send to Back
+                                        </button>
+                                    </div>
+                                    <div style={{ textAlign: 'right', marginTop: '10px' }}>
                                         <button
                                             onClick={() => {
                                                 setPlacedStickers(prev => prev.filter(s => s.id !== selectedId));
