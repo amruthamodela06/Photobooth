@@ -6,6 +6,7 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
     const [stream, setStream] = useState(null);
     const [error, setError] = useState(null);
     const [countdown, setCountdown] = useState(null);
+    const [flash, setFlash] = useState(false);
 
     useImperativeHandle(ref, () => ({
         /**
@@ -50,6 +51,8 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
             ctx.scale(-1, 1);
             ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL('image/png');
+            setFlash(true);
+            setTimeout(() => setFlash(false), 150);
             if (onPhotoTaken) onPhotoTaken(dataUrl);
         }
     };
@@ -103,6 +106,10 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
                     ...filterStyle
                 }}
             />
+            <div style={{
+                position: 'absolute', inset: 0, background: 'white', pointerEvents: 'none',
+                opacity: flash ? 0.9 : 0, transition: flash ? 'none' : 'opacity 0.35s ease-out'
+            }} />
             {countdown && (
                 <div style={{
                     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
