@@ -4,3 +4,11 @@ dist-electron/
 client/dist/
 .env
 *.log
+
+# Runtime output
+captures/
+logs/
+
+# Local env overrides
+client/.env.local
+
