@@ -7,6 +7,7 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
     const [error, setError] = useState(null);
     const [countdown, setCountdown] = useState(null);
     const [flash, setFlash] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
 
     useImperativeHandle(ref, () => ({
         /**
@@ -60,6 +61,7 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
     useEffect(() => {
         let activeStream = null;
         let cancelled = false;
+        setError(null);
         const initCamera = async () => {
             try {
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -77,7 +79,13 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
                 }
             } catch (err) {
                 console.error("Error accessing camera:", err);
-                setError("Could not access camera. Please ensure it is connected.");
+                const messages = {
+                    NotAllowedError: 'Camera permission was denied. Allow camera access and press Retry.',
+                    NotFoundError: 'No camera found. Connect a webcam and press Retry.',
+                    NotReadableError: 'The camera is in use by another application. Close it and press Retry.',
+                    OverconstrainedError: 'This camera does not support the requested resolution.',
+                };
+                setError(messages[err.name] || "Could not access camera. Please ensure it is connected.");
             }
         };
         initCamera();
@@ -86,11 +94,24 @@ const CameraFeed = forwardRef(({ filterStyle, onPhotoTaken }, ref) => {
             // `stream` state would be stale here, so use the local reference
             if (activeStream) activeStream.getTracks().forEach(track => track.stop());
         };
-    }, []);
+    }, [retryKey]);
 
     return (
         <div className="camera-feed" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <div className="error-message" style={{
+                    position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: '16px', color: 'white', zIndex: 5, textAlign: 'center', padding: '20px'
+                }}>
+                    <span style={{ fontSize: '1.1rem' }}>{error}</span>
+                    <button
+                        onClick={() => setRetryKey(k => k + 1)}
+                        style={{ padding: '10px 24px', borderRadius: '50px', border: 'none', background: '#FF6F61', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
             <canvas ref={canvasRef} style={{ display: 'none' }} />
             <video
                 ref={videoRef}
